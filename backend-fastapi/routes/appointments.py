@@ -40,10 +40,11 @@ def get_my_appointments(user=Depends(patient_guard)):
              apt["slot"] = pytz.utc.localize(apt["slot"])
         
         # Doctor Lookup
-        doc = users_col.find_one({"_id": apt["doctorId"]}, {"name": 1, "specialization": 1})
+        doc = users_col.find_one({"_id": apt["doctorId"]}, {"name": 1, "specialization": 1, "wallet_address": 1})
         if doc:
             apt["doctorName"] = doc.get("name", "Unknown Doctor")
             apt["specialization"] = doc.get("specialization", "General Physician")
+            apt["doctorWallet"] = doc.get("wallet_address", "")
         else:
             apt["doctorName"] = "Unknown"
             apt["specialization"] = "N/A"

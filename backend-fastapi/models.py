@@ -12,6 +12,7 @@ class PatientRegister(BaseModel):
     email: EmailStr
     phone: str
     password: str
+    wallet_address: Optional[str] = None
 
 class DoctorRegister(BaseModel):
     name: str
@@ -23,6 +24,7 @@ class DoctorRegister(BaseModel):
     hospitalId: str  
     latitude: Optional[float] = None
     longitude: Optional[float] = None
+    wallet_address: Optional[str] = None
 
 class HospitalAdminRegister(BaseModel):
     name: str

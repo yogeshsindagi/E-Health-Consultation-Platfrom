@@ -32,6 +32,7 @@ interface User {
   id: string;
   role: string;
   name: string;
+  walletAddress?: string;
 }
 
 interface AuthContextType {
@@ -42,9 +43,11 @@ interface AuthContextType {
   ) => Promise<User>;
   register: (data: RegisterPayload) => Promise<void>;
   logout: () => void;
+  connectWallet: () => Promise<void>;
 }
 
 /* -------------------- Context -------------------- */
+import { ethers } from "ethers";
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
@@ -52,9 +55,9 @@ const AuthContext = createContext<AuthContextType | null>(null);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(false); 
+  const [loading, setLoading] = useState(false);
 
-useEffect(() => {
+  useEffect(() => {
     const token = localStorage.getItem("token");
     if (token) {
       try {
@@ -64,6 +67,8 @@ useEffect(() => {
           localStorage.removeItem("token");
           setUser(null);
         } else {
+          // Ideally fetch full user profile to get walletAddress if token doesn't have it
+          // For now, we leave it undefined until connectWallet or re-login if we updated token
           setUser({
             id: decoded.user_id,
             role: decoded.role,
@@ -105,6 +110,7 @@ useEffect(() => {
       id: decoded.user_id,
       role: decoded.role,
       name: decoded.name,
+      // If token has wallet_address include it, else fetch or leave empty
     };
 
     localStorage.setItem("token", token);
@@ -130,6 +136,45 @@ useEffect(() => {
     await axios.post(url, data);
   };
 
+  /* -------- CONNECT WALLET -------- */
+
+  const connectWallet = async () => {
+    if (!window.ethereum) {
+      alert("Please install MetaMask!");
+      return;
+    }
+
+    if (!user) {
+      alert("Please login first.");
+      return;
+    }
+
+    try {
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
+      const address = await signer.getAddress();
+
+      // Sign Message to prove ownership
+      const message = `Connect to E-Health: ${user.id}`;
+      const signature = await signer.signMessage(message);
+
+      // Send to Backend
+      await axios.post("http://127.0.0.1:8000/users/link-wallet", {
+        walletAddress: address,
+        signature: signature
+      });
+
+      // Update State
+      setUser({ ...user, walletAddress: address });
+      alert("Wallet Linked Successfully!");
+
+    } catch (error) {
+      console.error("Wallet connection failed:", error);
+      alert("Failed to link wallet.");
+    }
+  };
+
+
   /* -------- LOGOUT -------- */
 
   const logout = () => {
@@ -139,7 +184,7 @@ useEffect(() => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, register, logout }}>
+    <AuthContext.Provider value={{ user, login, register, logout, connectWallet }}>
       {children}
     </AuthContext.Provider>
   );

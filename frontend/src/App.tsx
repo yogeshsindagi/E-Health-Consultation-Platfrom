@@ -11,11 +11,11 @@ function App() {
     <Router>
       {/* Toaster component allows the toast.success/error calls to show up */}
       <Toaster position="top-right" richColors />
-      
+
       <Routes>
         {/* Redirect root to login */}
         <Route path="/" element={<Navigate to="/login" replace />} />
-        
+
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
 
@@ -24,9 +24,9 @@ function App() {
         <Route path="/patient/dashboard" element={<PatientDashboard />} />
 
         <Route path="/doctor/dashboard" element={<DoctorDashboard />} />
-        
-        
-        
+
+
+
       </Routes>
     </Router>
   );

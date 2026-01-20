@@ -12,13 +12,14 @@ def get_current_user(token: str = Depends(oauth2_scheme)):
 
         if "user_id" not in payload or "role" not in payload:
             raise HTTPException(
-                status_code=status.HTTPHTTP_401_UNAUTHORIZED,
+                status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid token payload"
             )
 
         return payload
 
-    except JWTError:
+    except JWTError as e:
+        print(f"[ERROR] JWT Error: {e}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid or expired token"
